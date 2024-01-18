@@ -278,26 +278,8 @@ export default async function update(state) {
             disabled: false,
         });
 
-        // build up an array o fmap objects which are used to update display buildings
-        // always show the current team counts
-        const mapObj = [
-            {
-                type: "building",
-                id: `${blueCounter ? blueCounter.id : ""}`,
-                key: "labelText",
-                value: `${blueCount}`,
-            },
-            {
-                type: "building",
-                id: `${redCounter ? redCounter.id : ""}`,
-                key: "labelText",
-                value: `${redCount}`,
-            },
-        ];
-
         return {
             version: 1,
-            map: mapObj,
             components: [
                 {
                     id: "dbhq",
