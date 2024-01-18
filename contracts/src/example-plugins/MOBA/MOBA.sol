@@ -31,7 +31,7 @@ contract MOBA is BuildingKind {
     // these functions do not have their own definitions
     function join() external {}
 
-    function start(bytes24 duckBuildingID, bytes24 burgerBuildingID) external {}
+    function start(bytes24 redBaseID, bytes24 blueBaseID) external {}
 
     function claim() external {}
 
@@ -49,33 +49,27 @@ contract MOBA is BuildingKind {
         if ((bytes4)(payload) == this.join.selector) {
             _join(ds, state, actor, buildingInstance);
         } else if ((bytes4)(payload) == this.start.selector) {
-            (bytes24 duckBuildingID, bytes24 burgerBuildingID) = abi.decode(
+            (bytes24 redBaseID, bytes24 blueBaseId) = abi.decode(
                 payload[4:],
                 (bytes24, bytes24)
             );
-            _start(
-                ds,
-                state,
-                buildingInstance,
-                duckBuildingID,
-                burgerBuildingID
-            );
+            _start(ds, state, buildingInstance, redBaseID, blueBaseId);
         } else if ((bytes4)(payload) == this.claim.selector) {
             _claim(ds, state, actor, buildingInstance);
         } else if ((bytes4)(payload) == this.reset.selector) {
             _reset(ds, buildingInstance);
         }
 
-        ds.getDispatcher().dispatch(
-            abi.encodeCall(
-                Actions.SET_DATA_ON_BUILDING,
-                (
-                    buildingInstance,
-                    "prizePool",
-                    bytes32(uint256(_calculatePool()))
-                )
-            )
-        );
+        // ds.getDispatcher().dispatch(
+        //     abi.encodeCall(
+        //         Actions.SET_DATA_ON_BUILDING,
+        //         (
+        //             buildingInstance,
+        //             "prizePool",
+        //             bytes32(uint256(_calculatePool()))
+        //         )
+        //     )
+        // );
     }
 
     function _join(
