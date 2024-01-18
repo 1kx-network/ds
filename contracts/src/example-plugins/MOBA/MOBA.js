@@ -123,8 +123,6 @@ export default async function update(state) {
     const {
         prizePool,
         gameActive,
-        startBlock,
-        endBlock,
         buildingKindIdRed,
         buildingKindIdBlue,
         teamRedLength,
@@ -151,7 +149,12 @@ export default async function update(state) {
 
     const canJoin = !gameActive;
 
-    const canStart = !gameActive && teamRedLength > 0 && teamBlueLength > 0;
+    const canStart =
+        !gameActive &&
+        teamRedLength > 0 &&
+        teamBlueLength > 0 &&
+        redCount === 1 &&
+        blueCount === 1;
 
     if (canJoin) {
         htmlBlock += `<p>total players: ${
@@ -245,26 +248,27 @@ export default async function update(state) {
 
     if (gameActive) {
         // Display selected team buildings
-        const buildingKindDuck =
+        const buildingKindRed =
             state.world.buildingKinds.find((b) => b.id === buildingKindIdRed) ||
             {};
-        const buildingKindBurger =
+        const buildingKindBlue =
             state.world.buildingKinds.find(
                 (b) => b.id === buildingKindIdBlue
             ) || {};
         htmlBlock += `
             <h3>Team Buildings:</h3>
-            <p>Team 🔴: ${buildingKindDuck.name?.value}</p>
-            <p>Team 🔵: ${buildingKindBurger.name?.value}</p></br>
+            <p>Team 🔴: ${buildingKindRed.name?.value}</p>
+            <p>Team 🔵: ${buildingKindBlue.name?.value}</p></br>
 
         `;
 
-        buttonList.push({
-            text: "End Game",
-            type: "action",
-            action: claim,
-            disabled: blueCount === redCount,
-        });
+        if (redCount !== blueCount) {
+            const redWon = redCount > blueCount;
+            htmlBlock += `
+            <p>Team <b>${redWon ? "RED" : "BLUE"}</b> have won the match!</p>
+            <p style="text-align: center;">${redWon ? "🔴🏆🔴" : "🔵🏆🔵"}</p>
+            `;
+        }
 
         // Reset is always offered (requires some trust!)
         buttonList.push({
@@ -315,8 +319,6 @@ export default async function update(state) {
             ],
         };
     }
-
-    // --- Duckbur HQ Specific functions
 
     function getHQData(selectedBuilding) {
         const gameActive = getDataBool(selectedBuilding, "gameActive");
