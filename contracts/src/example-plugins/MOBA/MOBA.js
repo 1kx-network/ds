@@ -92,7 +92,7 @@ export default async function update(state) {
     // so we need to find all HQs on the map and update them each in turn
     //
     // for now we just update the first we find
-    const dvbBuildingName = "Registery Office";
+    const dvbBuildingName = "MOBA";
     const selectedBuilding = state.world?.buildings.find(
         (b) => b.kind?.name?.value == dvbBuildingName
     );
@@ -170,7 +170,7 @@ export default async function update(state) {
 
         for (let i = 0; i < teamRedLength; i++) {
             if (mobileUnit.id == getHQTeamUnit(selectedBuilding, "Red", i)) {
-                unitTeam = "🐤";
+                unitTeam = "🔴";
                 break;
             }
         }
@@ -180,7 +180,7 @@ export default async function update(state) {
                 if (
                     mobileUnit.id == getHQTeamUnit(selectedBuilding, "Blue", i)
                 ) {
-                    unitTeam = "🍔";
+                    unitTeam = "🔵";
                     break;
                 }
             }
