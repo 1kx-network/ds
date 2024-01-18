@@ -12,28 +12,14 @@ import "@ds/utils/LibString.sol";
 using Schema for State;
 
 contract MOBA is BuildingKind {
-    // MOBA TODO: instead of counting the number of buildings, check whether BaseA and BaseB exist in the game
-
-    // todo - storing contract members like this is per BuildingKind
-    // to work with building instances and therefore allow multiple buildings
-    // this data should be stored either as a map to buildingInstance
-    // or only use SET_DATA_ON_BUILDING action
     bytes24[] private redTeam;
     bytes24[] private bleTeam;
-
-    // consts
-    // prize bag info
-    uint8 constant prizeBagSlot = 0;
-    uint8 constant prizeItemSlot = 0;
-    uint64 constant joinFee = 2;
 
     // function declerations only used to create signatures for the use payload
     // these functions do not have their own definitions
     function join() external {}
 
     function start(bytes24 redBaseID, bytes24 blueBaseID) external {}
-
-    function claim() external {}
 
     function reset() external {}
 
@@ -54,22 +40,9 @@ contract MOBA is BuildingKind {
                 (bytes24, bytes24)
             );
             _start(ds, state, buildingInstance, redBaseID, blueBaseId);
-        } else if ((bytes4)(payload) == this.claim.selector) {
-            _claim(ds, state, actor, buildingInstance);
         } else if ((bytes4)(payload) == this.reset.selector) {
             _reset(ds, buildingInstance);
         }
-
-        // ds.getDispatcher().dispatch(
-        //     abi.encodeCall(
-        //         Actions.SET_DATA_ON_BUILDING,
-        //         (
-        //             buildingInstance,
-        //             "prizePool",
-        //             bytes32(uint256(_calculatePool()))
-        //         )
-        //     )
-        // );
     }
 
     function _join(
@@ -83,32 +56,6 @@ contract MOBA is BuildingKind {
         if (gameActive) {
             revert("Can't join while a game is already active");
         }
-
-        // TODO: remove prize stuff
-
-        // // verify payment has been made
-        // // this assumes the Unit has issed an action to transfer the fee in the same transaction batch as the use action
-        // // see DuckBurgerHQ.js join function for how this is done
-        // uint64 lastKnownPrizeBalance = uint64(
-        //     uint256(state.getData(buildingId, "lastKnownPrizeBalance"))
-        // );
-        // uint64 currentPrizeBalance = _getPrizeBalance(state, buildingId);
-        // if ((currentPrizeBalance - joinFee) < lastKnownPrizeBalance) {
-        //     revert("Fee not paid");
-        // }
-
-        // // remember the new balance
-        // Dispatcher dispatcher = ds.getDispatcher();
-        // dispatcher.dispatch(
-        //     abi.encodeCall(
-        //         Actions.SET_DATA_ON_BUILDING,
-        //         (
-        //             buildingId,
-        //             "lastKnownPrizeBalance",
-        //             bytes32(uint256(currentPrizeBalance))
-        //         )
-        //     )
-        // );
 
         for (uint256 i = 0; i < redTeam.length; i++) {
             if (redTeam[i] == unitId) revert("Already joined");
@@ -216,36 +163,15 @@ contract MOBA is BuildingKind {
             )
         );
 
-        // TODO: remove time stuff
+        {
+            (uint24 redBuildings, uint24 blueBuildings) = getBuildingCounts(
+                state,
+                buildingId
+            );
 
-        // // todo if the game length is a parameter, we could calculate this from the endBlock
-        // dispatcher.dispatch(
-        //     abi.encodeCall(
-        //         Actions.SET_DATA_ON_BUILDING,
-        //         (buildingId, "startBlock", bytes32(uint256(block.number)))
-        //     )
-        // );
-
-        // // set endblock to now plus 1 minute (assuming 2 second blocks)
-        // // todo do we take time as a param
-        // dispatcher.dispatch(
-        //     abi.encodeCall(
-        //         Actions.SET_DATA_ON_BUILDING,
-        //         (
-        //             buildingId,
-        //             "endBlock",
-        //             bytes32(uint256(block.number + 1 * 30))
-        //         )
-        //     )
-        // );
-
-        // // set start to now
-        // dispatcher.dispatch(
-        //     abi.encodeCall(
-        //         Actions.SET_DATA_ON_BUILDING,
-        //         (buildingId, "startBlock", bytes32(uint256(block.number)))
-        //     )
-        // );
+            require(redBuildings == 1, "Red team needs a base to start");
+            require(blueBuildings == 1, "Blue team needs a base to start");
+        }
 
         // gameActive
         dispatcher.dispatch(
@@ -255,170 +181,6 @@ contract MOBA is BuildingKind {
             )
         );
     }
-
-    function _claim(
-        Game ds,
-        State state,
-        bytes24 unitId,
-        bytes24 buildingId
-    ) private {
-        // check game finished
-
-        // TODO: remove time stuff
-        // {
-        //     uint256 endBlock = uint256(state.getData(buildingId, "endBlock"));
-        //     if (block.number < endBlock) {
-        //         revert("Can't claim, game is running");
-        //     }
-        // }
-
-        // check unit in a team
-        // check unit not already claimed
-        bool isRedTeamMember = false;
-        bool isBlueTeamMember = false;
-        for (uint256 i = 0; i < redTeam.length; i++) {
-            if (redTeam[i] == unitId) {
-                isRedTeamMember = true;
-                break;
-            }
-        }
-        for (uint256 i = 0; i < blueTeam.length; i++) {
-            if (blueTeam[i] == unitId) {
-                isBlueTeamMember = true;
-                break;
-            }
-        }
-        require(
-            isRedTeamMember || isBlueTeamMember,
-            "Unit did not play or has already claimed"
-        );
-
-        // count buildings for each team
-        // NOTE: Scoped to avoid stack being too deep
-        bool isDraw;
-        {
-            (uint24 redBuildings, uint24 blueBuildings) = getBuildingCounts(
-                state,
-                buildingId
-            );
-
-            if (redBuildings > 1) {
-                revert("Can't be more than one Red Base");
-            }
-            if (blueBuildings > 1) {
-                revert("Can't be more than one Blue Base");
-            }
-
-            if (redBuildings == 1 && blueBuildings == 1) {
-                revert("Game isn't over");
-            }
-
-            // check unit is in winning team
-
-            if (isRedTeamMember && redBuildings < blueBuildings) {
-                revert("You, red, are not on the winning team: blue");
-            } else if (isBlueTeamMember && blueBuildings < redBuildings) {
-                revert("You, blue, are not on the winning team: red");
-            }
-        }
-
-        // // winner! (or drawer)
-        // // \todo this currently assumes even teams
-        // Dispatcher dispatcher = ds.getDispatcher();
-        // _awardPrize(
-        //     state,
-        //     dispatcher,
-        //     buildingId,
-        //     unitId,
-        //     isDraw ? joinFee : _calculatePrizeAmount()
-        // );
-
-        // // remember new prize balance
-        // dispatcher.dispatch(
-        //     abi.encodeCall(
-        //         Actions.SET_DATA_ON_BUILDING,
-        //         (
-        //             buildingId,
-        //             "lastKnownPrizeBalance",
-        //             bytes32(uint256(_getPrizeBalance(state, buildingId)))
-        //         )
-        //     )
-        // );
-
-        // Remove unit from team so they can't double claim
-        if (isRedTeamMember) {
-            removeUnitFromArray(redTeam, unitId);
-        } else if (isBlueTeamMember) {
-            removeUnitFromArray(blueteam, unitId);
-        }
-    }
-
-    // function _awardPrize(
-    //     State state,
-    //     Dispatcher dispatcher,
-    //     bytes24 buildingId,
-    //     bytes24 unitId,
-    //     uint64 prizeAmount
-    // ) private {
-    //     bytes24 prizeBagId = state.getEquipSlot(buildingId, prizeBagSlot);
-    //     (bytes24 prizeItemId /*uint64 balance*/, ) = state.getItemSlot(
-    //         prizeBagId,
-    //         prizeItemSlot
-    //     );
-
-    //     (uint8 destBagSlot, uint8 destItemSlot) = _findValidItemSlot(
-    //         state,
-    //         unitId,
-    //         prizeItemId,
-    //         prizeAmount
-    //     );
-
-    //     dispatcher.dispatch(
-    //         abi.encodeCall(
-    //             Actions.TRANSFER_ITEM_MOBILE_UNIT,
-    //             (
-    //                 buildingId,
-    //                 [buildingId, unitId],
-    //                 [prizeBagSlot, destBagSlot],
-    //                 [prizeItemSlot, destItemSlot],
-    //                 bytes24(0), // To bag ID not required
-    //                 prizeAmount
-    //             )
-    //         )
-    //     );
-    // }
-
-    // function _findValidItemSlot(
-    //     State state,
-    //     bytes24 unitId,
-    //     bytes24 itemId,
-    //     uint64 transferAmount
-    // ) private view returns (uint8 destBagSlot, uint8 destItemSlot) {
-    //     for (destBagSlot = 0; destBagSlot < 2; destBagSlot++) {
-    //         bytes24 destBagId = state.getEquipSlot(unitId, destBagSlot);
-
-    //         require(
-    //             bytes4(destBagId) == Kind.Bag.selector,
-    //             "findValidItemSlot(): No bag found at equip slot"
-    //         );
-
-    //         for (destItemSlot = 0; destItemSlot < 4; destItemSlot++) {
-    //             (bytes24 destItemId, uint64 destBalance) = state.getItemSlot(
-    //                 destBagId,
-    //                 destItemSlot
-    //             );
-    //             if (
-    //                 (destItemId == bytes24(0) || destItemId == itemId) &&
-    //                 destBalance + transferAmount <= 100
-    //             ) {
-    //                 // Found valid slot
-    //                 return (destBagSlot, destItemSlot);
-    //             }
-    //         }
-    //     }
-
-    //     revert("No valid slot for prize claim found");
-    // }
 
     function removeUnitFromArray(
         bytes24[] storage array,
@@ -439,19 +201,6 @@ contract MOBA is BuildingKind {
         // todo - do we check if all claims have been made ?
         // for now allwing reset any time which requires some trust :)
 
-        // set state to joining (gameActive ?)
-        // dispatcher.dispatch(
-        //     abi.encodeCall(
-        //         Actions.SET_DATA_ON_BUILDING,
-        //         (buildingId, "startBlock", bytes32(uint256(block.number)))
-        //     )
-        // );
-        // dispatcher.dispatch(
-        //     abi.encodeCall(
-        //         Actions.SET_DATA_ON_BUILDING,
-        //         (buildingId, "endBlock", bytes32(uint256(block.number)))
-        //     )
-        // );
         dispatcher.dispatch(
             abi.encodeCall(
                 Actions.SET_DATA_ON_BUILDING,
@@ -472,18 +221,6 @@ contract MOBA is BuildingKind {
                 (buildingId, "redTeamLength", bytes32(0))
             )
         );
-        // dispatcher.dispatch(
-        //     abi.encodeCall(
-        //         Actions.SET_DATA_ON_BUILDING,
-        //         (buildingId, "lastKnownPrizeBalance", bytes32(0))
-        //     )
-        // );
-        // dispatcher.dispatch(
-        //     abi.encodeCall(
-        //         Actions.SET_DATA_ON_BUILDING,
-        //         (buildingId, "prizePool", bytes32(0))
-        //     )
-        // );
         dispatcher.dispatch(
             abi.encodeCall(
                 Actions.SET_DATA_ON_BUILDING,
@@ -497,23 +234,6 @@ contract MOBA is BuildingKind {
             )
         );
     }
-
-    // function _getPrizeBalance(
-    //     State state,
-    //     bytes24 buildingId
-    // ) internal view returns (uint64) {
-    //     bytes24 prizeBag = state.getEquipSlot(buildingId, prizeBagSlot);
-    //     (, uint64 balance) = state.getItemSlot(prizeBag, prizeItemSlot);
-    //     return balance;
-    // }
-
-    // function _calculatePrizeAmount() internal pure returns (uint64) {
-    //     return joinFee * 2;
-    // }
-
-    // function _calculatePool() internal view returns (uint64) {
-    //     return uint64(teamDuckUnits.length + teamBurgerUnits.length) * joinFee;
-    // }
 
     function getBuildingCounts(
         State state,
@@ -540,25 +260,11 @@ contract MOBA is BuildingKind {
                 coords(arenaTiles[i])[3]
             );
             if (state.getBuildingKind(arenaBuildingID) == redBuildingKind) {
-                // uint64 constructionBlockNum = state
-                //     .getBuildingConstructionBlockNum(arenaBuildingID);
-                // if (
-                //     constructionBlockNum >= startBlock &&
-                //     constructionBlockNum <= endBlock
-                // ) {
                 reds++;
-                // }
             } else if (
                 state.getBuildingKind(arenaBuildingID) == blueBuildingKind
             ) {
-                // uint64 constructionBlockNum = state
-                //     .getBuildingConstructionBlockNum(arenaBuildingID);
-                // if (
-                //     constructionBlockNum >= startBlock &&
-                //     constructionBlockNum <= endBlock
-                // ) {
                 blues++;
-                // }
             }
         }
     }
