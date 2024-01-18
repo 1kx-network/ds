@@ -36,8 +36,8 @@ export default async function update(state) {
     };
 
     const startSubmit = (values) => {
-        const selectedBuildingKindBaseRed = values["buildingKindIdBaseRed"];
-        const selectedBuildTypeBaseBlue = values["buildingKindIdBaseBlue"];
+        const selectedBuildingKindBaseRed = values["buildingKindIdRed"];
+        const selectedBuildTypeBaseBlue = values["buildingKindIdBlue"];
 
         // Verify selected buildings are different from each other
         if (selectedBuildingKindBaseRed == selectedBuildTypeBaseBlue) {
