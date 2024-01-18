@@ -296,7 +296,7 @@ export default async function update(state) {
     function getHQData(selectedBuilding) {
         const gameActive = getDataBool(selectedBuilding, "gameActive");
         const startBlock = getDataInt(selectedBuilding, "startBlock");
-        const endBlock = getDataInt(selectedBuilding, "endBlock");
+      //  const endBlock = getDataInt(selectedBuilding, "endBlock");
         const buildingKindIdRed = getDataBytes24(
             selectedBuilding,
             "buildingKindIdRed"
