@@ -2,14 +2,14 @@
 kind: BuildingKind
 spec:
   category: factory
-  name: Red Base
-  description: This is the Base of Team Red
+  name: Blue Base
+  description: This is the Base of Team Blue
   model: 14-14
   color: 0
   contract:
-    file: ./BaseRed.sol
+    file: ./BaseBlue.sol
   plugin:
-    file: ./BaseRed.js
+    file: ./BaseBlue.js
   materials:
     - name: Red Goo
       quantity: 100
