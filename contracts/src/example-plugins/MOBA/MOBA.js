@@ -3,13 +3,6 @@ import ds from "downstream";
 const nullBytes24 = `0x${"00".repeat(24)}`;
 const redBuildingTopId = "04";
 const blueBuildingTopId = "17";
-const blueCounterKindId = "🔵 Blue Display Building";
-const redCounterKindId = "🔴 Red Display Building";
-const countdownBuildingKindId = "Countdown Building";
-
-let blueCounter;
-let redCounter;
-let countdownBuilding;
 
 export default async function update(state) {
     //
@@ -132,8 +125,6 @@ export default async function update(state) {
     const localBuildings = range5(state, selectedBuilding);
     const redCount = countBuildings(localBuildings, buildingKindIdRed);
     const blueCount = countBuildings(localBuildings, buildingKindIdBlue);
-
-    connectDisplayBuildings(state, localBuildings);
 
     // check current game state:
     // - NotStarted : GameActive == false
@@ -336,47 +327,6 @@ export default async function update(state) {
 
     // search the buildings list ofr the display buildings we're gpoing to use
     // for team counts and coutdown
-    function connectDisplayBuildings(state, buildings) {
-        if (!blueCounter) {
-            blueCounter = buildings.find((element) =>
-                getBuildingKindsByTileLocation(
-                    state,
-                    element,
-                    blueCounterKindId
-                )
-            );
-        }
-        if (!redCounter) {
-            redCounter = buildings.find((element) =>
-                getBuildingKindsByTileLocation(state, element, redCounterKindId)
-            );
-        }
-        if (!countdownBuilding) {
-            countdownBuilding = buildings.find((element) =>
-                getBuildingKindsByTileLocation(
-                    state,
-                    element,
-                    countdownBuildingKindId
-                )
-            );
-        }
-    }
-
-    function formatTime(timeInMs) {
-        let seconds = Math.floor(timeInMs / 1000);
-        let minutes = Math.floor(seconds / 60);
-        let hours = Math.floor(minutes / 60);
-
-        seconds %= 60;
-        minutes %= 60;
-
-        // Pad each component to ensure two digits
-        let formattedHours = String(hours).padStart(2, "0");
-        let formattedMinutes = String(minutes).padStart(2, "0");
-        let formattedSeconds = String(seconds).padStart(2, "0");
-
-        return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
-    }
 
     const countBuildings = (buildingsArray, kindID) => {
         return buildingsArray.filter((b) => b.kind?.id == kindID).length;
@@ -488,31 +438,6 @@ export default async function update(state) {
             Math.abs(tileCoords[1] - nextTile[1]),
             Math.abs(tileCoords[2] - nextTile[2])
         );
-    }
-
-    function getBuildingKindsByTileLocation(state, building, kindID) {
-        return (state?.world?.buildings || []).find(
-            (b) => b.id === building.id && b.kind?.name?.value == kindID
-        );
-    }
-
-    // get first slot in bags that matches item requirements
-    function findBagAndSlot(bags, requiredItemId, requiredBalance) {
-        for (const bag of bags) {
-            for (const slotKey in bag.slots) {
-                const slot = bag.slots[slotKey];
-                if (
-                    (!requiredItemId || slot.item.id == requiredItemId) &&
-                    requiredBalance <= slot.balance
-                ) {
-                    return {
-                        bag: bag,
-                        slotKey: slot.key, // assuming each slot has a 'key' property
-                    };
-                }
-            }
-        }
-        return { bag: null, slotKey: -1 };
     }
 
     // -- Building Data
