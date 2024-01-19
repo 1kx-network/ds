@@ -96,6 +96,8 @@ contract MOBA is BuildingKind {
             keccak256(abi.encodePacked("blue"))
         ) {
             processTeam(dispatcher, buildingId, "blueTeam", blueTeam, unitId);
+        } else {
+            revert("invalid team");
         }
     }
 
@@ -152,6 +154,8 @@ contract MOBA is BuildingKind {
         if (redTeamLength == 0 || blueTeamLength == 0) {
             revert("Can't start, both teams must have at least 1 player");
         }
+
+        require(redBaseID != blueBaseID, "Bases must be different");
 
         // set team buildings
         dispatcher.dispatch(

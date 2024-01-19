@@ -1,8 +1,8 @@
 import ds from "downstream";
 
 const nullBytes24 = `0x${"00".repeat(24)}`;
-const redBuildingTopId = "04";
-const blueBuildingTopId = "17";
+const redBuildingTopId = "14";
+const blueBuildingTopId = "14";
 
 export default async function update(state) {
   //
@@ -83,7 +83,7 @@ export default async function update(state) {
 
   // early out if we don't have any buildings or state isn't ready
   if (!selectedBuilding || !state?.world?.buildings) {
-    console.log("NO MOBA BUILDING FOUND 3");
+    console.log("NO MOBA BUILDING FOUND 8");
     return {
       version: 1,
       map: [],
@@ -109,12 +109,20 @@ export default async function update(state) {
     gameActive,
     buildingKindIdRed,
     buildingKindIdBlue,
-    teamRedLength,
-    teamBlueLength,
+    redTeamLength,
+    blueTeamLength,
   } = getHQData(selectedBuilding);
+  console.log({
+    gameActive,
+    buildingKindIdRed,
+    buildingKindIdBlue,
+    redTeamLength,
+    blueTeamLength,
+  })
   const localBuildings = range5(state, selectedBuilding);
   const redCount = countBuildings(localBuildings, buildingKindIdRed);
   const blueCount = countBuildings(localBuildings, buildingKindIdBlue);
+  console.log({ localBuildings, redCount, blueCount })
   // check current game state:
   // - NotStarted : GameActive == false
   // - Running : GameActive == true && endBlock < currentBlock
@@ -131,13 +139,12 @@ export default async function update(state) {
 
   const canStart =
     !gameActive &&
-    teamRedLength > 0 &&
-    teamBlueLength > 0 &&
-    redCount === 1 &&
-    blueCount === 1;
+    redTeamLength > 0 &&
+    blueTeamLength > 0
+
+  console.log({ canStart, canJoin })
   if (canJoin) {
-    htmlBlock += `<p>total players: ${teamRedLength + teamBlueLength
-      }</p></br>`;
+    htmlBlock += `<p>total players: ${redTeamLength + blueTeamLength}</p></br>`;
   }
 
   // Show what team the unit is on
@@ -147,17 +154,17 @@ export default async function update(state) {
   if (mobileUnit) {
     let unitTeam = "";
 
-    for (let i = 0; i < teamRedLength; i++) {
-      if (mobileUnit.id == getHQTeamUnit(selectedBuilding, "Red", i)) {
+    for (let i = 0; i < redTeamLength; i++) {
+      if (mobileUnit.id == getHQTeamUnit(selectedBuilding, "red", i)) {
         unitTeam = "🔴";
         break;
       }
     }
 
     if (unitTeam === "") {
-      for (let i = 0; i < teamBlueLength; i++) {
+      for (let i = 0; i < blueTeamLength; i++) {
         if (
-          mobileUnit.id == getHQTeamUnit(selectedBuilding, "Blue", i)
+          mobileUnit.id == getHQTeamUnit(selectedBuilding, "blue", i)
         ) {
           unitTeam = "🔵";
           break;
@@ -173,6 +180,8 @@ export default async function update(state) {
     }
   }
 
+  console.log({ isOnTeam })
+
   if (!gameActive) {
 
     if (!isOnTeam) {
@@ -186,13 +195,13 @@ export default async function update(state) {
     } else {
       // Check reason why game can't start
       const waitingForStartCondition =
-        teamRedLength != teamBlueLength ||
-        teamRedLength + teamBlueLength < 2;
+        redTeamLength != blueTeamLength ||
+        redTeamLength + blueTeamLength < 2;
       let startConditionMessage = "";
       if (waitingForStartCondition) {
-        if (teamRedLength + teamBlueLength < 2) {
+        if (redTeamLength + blueTeamLength < 2) {
           startConditionMessage = "Waiting for players...";
-        } else if (teamRedLength != teamBlueLength) {
+        } else if (redTeamLength != blueTeamLength) {
           startConditionMessage = "Teams must be balanced...";
         }
       }
@@ -203,31 +212,27 @@ export default async function update(state) {
           : "Start",
         type: "action",
         action: start,
-        disabled: !canStart || teamRedLength != teamBlueLength,
+        disabled: !canStart || redTeamLength != blueTeamLength,
       });
     }
   }
 
-
-  if (canStart) {
-
-    // Show options to select team buildings
-    htmlBlock += `
+  // Show options to select team buildings
+  htmlBlock += `
             <h3>Select Team Buildings</h3>
             <p>🔴 Team 🔴</p>
             ${getBuildingKindSelectHtml(
-      state,
-      redBuildingTopId,
-      "buildingKindIdRed"
-    )}
+    state,
+    redBuildingTopId,
+    "buildingKindIdRed"
+  )}
             <p>🔵 Team 🔵</p>
             ${getBuildingKindSelectHtml(
-      state,
-      blueBuildingTopId,
-      "buildingKindIdBlue"
-    )}
+    state,
+    blueBuildingTopId,
+    "buildingKindIdBlue"
+  )}
         `;
-  }
 
   if (gameActive) {
     // Display selected team buildings
@@ -254,14 +259,14 @@ export default async function update(state) {
     }
 
 
-    // Reset is always offered (requires some trust!)
-    buttonList.push({
-      text: "Reset",
-      type: "action",
-      action: reset,
-      disabled: false,
-    });
   }
+  // Reset is always offered (requires some trust!)
+  buttonList.push({
+    text: "Reset",
+    type: "action",
+    action: reset,
+    disabled: false,
+  });
 
   console.log({ htmlBlock })
   return {
@@ -301,20 +306,20 @@ function getHQData(selectedBuilding) {
     selectedBuilding,
     "buildingKindIdBlue"
   );
-  const teamRedLength = getDataInt(selectedBuilding, "teamRedLength");
-  const teamBlueLength = getDataInt(selectedBuilding, "teamBlueLength");
+  const redTeamLength = getDataInt(selectedBuilding, "redTeamLength");
+  const blueTeamLength = getDataInt(selectedBuilding, "blueTeamLength");
 
   return {
     gameActive,
     buildingKindIdRed,
     buildingKindIdBlue,
-    teamRedLength,
-    teamBlueLength,
+    redTeamLength,
+    blueTeamLength,
   };
 }
 
 function getHQTeamUnit(selectedBuilding, team, index) {
-  return getDataBytes24(selectedBuilding, `team${team}Unit_${index}`);
+  return getDataBytes24(selectedBuilding, `${team}TeamUnit_${index}`);
 }
 
 // search the buildings list ofr the display buildings we're gpoing to use
