@@ -13,7 +13,7 @@ using Schema for State;
 
 contract MOBA is BuildingKind {
     bytes24[] private redTeam;
-    bytes24[] private bleTeam;
+    bytes24[] private blueTeam;
 
     // function declerations only used to create signatures for the use payload
     // these functions do not have their own definitions
@@ -53,6 +53,10 @@ contract MOBA is BuildingKind {
     ) private {
         // check game not in progress
         bool gameActive = uint256(state.getData(buildingId, "gameActive")) == 1;
+
+        // bool gameActive = state.getDataBool(buildingId, "gameActive");
+        // bool gameActive = state.getDataUint256(buildingId, "gameActive") == 1;
+        // bool gameActive = uint256(state.getData(buildingId, "gameActive")) == 1;
         if (gameActive) {
             revert("Can't join while a game is already active");
         }
@@ -208,7 +212,7 @@ contract MOBA is BuildingKind {
             )
         );
         delete redTeam;
-        delete blueteam;
+        delete blueTeam;
         dispatcher.dispatch(
             abi.encodeCall(
                 Actions.SET_DATA_ON_BUILDING,
@@ -245,11 +249,6 @@ contract MOBA is BuildingKind {
         bytes24 blueBuildingKind = bytes24(
             state.getData(buildingInstance, "buildingKindIdBlue")
         );
-        // uint256 endBlock = uint256(state.getData(buildingInstance, "endBlock"));
-        // uint256 startBlock = uint256(
-        //     state.getData(buildingInstance, "startBlock")
-        // );
-
         bytes24 tile = state.getFixedLocation(buildingInstance);
         bytes24[99] memory arenaTiles = range5(tile);
         for (uint256 i = 0; i < arenaTiles.length; i++) {
