@@ -9,6 +9,7 @@ export default async function update(state) {
   // Action handler functions
   //
 
+
   // An action can set a form submit handler which will be called after the action along with the form values
   let handleFormSubmit;
 
@@ -290,178 +291,179 @@ export default async function update(state) {
       ],
     };
   }
+}
 
-  function getHQData(selectedBuilding) {
-    const gameActive = getDataBool(selectedBuilding, "gameActive");
-    // const startBlock = getDataInt(selectedBuilding, "startBlock");
-    //  const endBlock = getDataInt(selectedBuilding, "endBlock");
-    const buildingKindIdRed = getDataBytes24(
-      selectedBuilding,
-      "buildingKindIdRed"
-    );
-    const buildingKindIdBlue = getDataBytes24(
-      selectedBuilding,
-      "buildingKindIdBlue"
-    );
-    const teamRedLength = getDataInt(selectedBuilding, "teamRedLength");
-    const teamBlueLength = getDataInt(selectedBuilding, "teamBlueLength");
+function getHQData(selectedBuilding) {
+  const gameActive = getDataBool(selectedBuilding, "gameActive");
+  // const startBlock = getDataInt(selectedBuilding, "startBlock");
+  //  const endBlock = getDataInt(selectedBuilding, "endBlock");
+  const buildingKindIdRed = getDataBytes24(
+    selectedBuilding,
+    "buildingKindIdRed"
+  );
+  const buildingKindIdBlue = getDataBytes24(
+    selectedBuilding,
+    "buildingKindIdBlue"
+  );
+  const teamRedLength = getDataInt(selectedBuilding, "teamRedLength");
+  const teamBlueLength = getDataInt(selectedBuilding, "teamBlueLength");
 
-    return {
-      gameActive,
-      buildingKindIdRed,
-      buildingKindIdBlue,
-      teamRedLength,
-      teamBlueLength,
-    };
-  }
-
-  function getHQTeamUnit(selectedBuilding, team, index) {
-    return getDataBytes24(selectedBuilding, `team${team}Unit_${index}`);
-  }
-
-  // search the buildings list ofr the display buildings we're gpoing to use
-  // for team counts and coutdown
-
-  const countBuildings = (buildingsArray, kindID) => {
-    return buildingsArray.filter((b) => b.kind?.id == kindID).length;
+  return {
+    gameActive,
+    buildingKindIdRed,
+    buildingKindIdBlue,
+    teamRedLength,
+    teamBlueLength,
   };
+}
 
-  function getBuildingKindSelectHtml(state, buildingTopId, selectId) {
-    return `
+function getHQTeamUnit(selectedBuilding, team, index) {
+  return getDataBytes24(selectedBuilding, `team${team}Unit_${index}`);
+}
+
+// search the buildings list ofr the display buildings we're gpoing to use
+// for team counts and coutdown
+
+function getBuildingKindSelectHtml(state, buildingTopId, selectId) {
+  return `
         <select id="${selectId}" name="${selectId}">
             ${state.world.buildingKinds
-        .filter(
-          (b) =>
-            b.model &&
-            b.model.value.substring(3, 5) === buildingTopId
-        )
-        .map(
-          (b) => `
+      .filter(
+        (b) =>
+          b.model &&
+          b.model.value.substring(3, 5) === buildingTopId
+      )
+      .map(
+        (b) => `
                 .filter((b) => b.model && b.model.value.substring(3, 5) === buildingTopId)
                     <option value="${b.id}">${b.name.value}</option>
                 `
-        )}
+      )}
         </select>
     `;
-  }
+}
 
-  // --- Generic State helper functions
+// --- Generic State helper functions
 
-  function getMobileUnit(state) {
-    return state?.selected?.mobileUnit;
-  }
+function getMobileUnit(state) {
+  return state?.selected?.mobileUnit;
+}
 
-  // search through all the bags in the world to find those belonging to this eqipee
-  // eqipee maybe a building, a mobileUnit or a tile
-  function getEquipeeBags(state, equipee) {
-    return equipee
-      ? (state?.world?.bags || []).filter(
-        (bag) => bag.equipee?.node.id === equipee.id
-      )
-      : [];
-  }
+// search through all the bags in the world to find those belonging to this eqipee
+// eqipee maybe a building, a mobileUnit or a tile
+function getEquipeeBags(state, equipee) {
+  return equipee
+    ? (state?.world?.bags || []).filter(
+      (bag) => bag.equipee?.node.id === equipee.id
+    )
+    : [];
+}
 
-  function logState(state) {
-    console.log("State sent to pluging:", state);
-  }
+function logState(state) {
+  console.log("State sent to pluging:", state);
+}
 
-  // get an array of buildings withiin 5 tiles of building
-  function range5(state, building) {
-    const range = 5;
-    const tileCoords = getTileCoords(building?.location?.tile?.coords);
-    let i = 0;
-    const foundBuildings = [];
-    for (let q = tileCoords[0] - range; q <= tileCoords[0] + range; q++) {
-      for (
-        let r = tileCoords[1] - range;
-        r <= tileCoords[1] + range;
-        r++
-      ) {
-        let s = -q - r;
-        let nextTile = [q, r, s];
-        if (distance(tileCoords, nextTile) <= range) {
-          state?.world?.buildings.forEach((b) => {
-            if (!b?.location?.tile?.coords) return;
+// get an array of buildings withiin 5 tiles of building
+function range5(state, building) {
+  const range = 5;
+  const tileCoords = getTileCoords(building?.location?.tile?.coords);
+  let i = 0;
+  const foundBuildings = [];
+  for (let q = tileCoords[0] - range; q <= tileCoords[0] + range; q++) {
+    for (
+      let r = tileCoords[1] - range;
+      r <= tileCoords[1] + range;
+      r++
+    ) {
+      let s = -q - r;
+      let nextTile = [q, r, s];
+      if (distance(tileCoords, nextTile) <= range) {
+        state?.world?.buildings.forEach((b) => {
+          if (!b?.location?.tile?.coords) return;
 
-            const buildingCoords = getTileCoords(
-              b.location.tile.coords
-            );
-            if (
-              buildingCoords[0] == nextTile[0] &&
-              buildingCoords[1] == nextTile[1] &&
-              buildingCoords[2] == nextTile[2]
-            ) {
-              foundBuildings[i] = b;
-              i++;
-            }
-          });
-        }
+          const buildingCoords = getTileCoords(
+            b.location.tile.coords
+          );
+          if (
+            buildingCoords[0] == nextTile[0] &&
+            buildingCoords[1] == nextTile[1] &&
+            buildingCoords[2] == nextTile[2]
+          ) {
+            foundBuildings[i] = b;
+            i++;
+          }
+        });
       }
     }
-    return foundBuildings;
   }
-
-  function hexToSignedDecimal(hex) {
-    if (hex.startsWith("0x")) {
-      hex = hex.substr(2);
-    }
-
-    let num = parseInt(hex, 16);
-    let bits = hex.length * 4;
-    let maxVal = Math.pow(2, bits);
-
-    // Check if the highest bit is set (negative number)
-    if (num >= maxVal / 2) {
-      num -= maxVal;
-    }
-
-    return num;
-  }
-
-  function getTileCoords(coords) {
-    return [
-      hexToSignedDecimal(coords[1]),
-      hexToSignedDecimal(coords[2]),
-      hexToSignedDecimal(coords[3]),
-    ];
-  }
-
-  function distance(tileCoords, nextTile) {
-    return Math.max(
-      Math.abs(tileCoords[0] - nextTile[0]),
-      Math.abs(tileCoords[1] - nextTile[1]),
-      Math.abs(tileCoords[2] - nextTile[2])
-    );
-  }
-
-  // -- Building Data
-
-  function getData(buildingInstance, key) {
-    return getKVPs(buildingInstance)[key];
-  }
-
-  function getDataBool(buildingInstance, key) {
-    var hexVal = getData(buildingInstance, key);
-    return typeof hexVal === "string" ? parseInt(hexVal, 16) == 1 : false;
-  }
-
-  function getDataInt(buildingInstance, key) {
-    var hexVal = getData(buildingInstance, key);
-    return typeof hexVal === "string" ? parseInt(hexVal, 16) : 0;
-  }
-
-  function getDataBytes24(buildingInstance, key) {
-    var hexVal = getData(buildingInstance, key);
-    return typeof hexVal === "string" ? hexVal.slice(0, -16) : nullBytes24;
-  }
-
-  function getKVPs(buildingInstance) {
-    return buildingInstance.allData.reduce((kvps, data) => {
-      kvps[data.name] = data.value;
-      return kvps;
-    }, {});
-  }
+  return foundBuildings;
 }
+
+function hexToSignedDecimal(hex) {
+  if (hex.startsWith("0x")) {
+    hex = hex.substr(2);
+  }
+
+  let num = parseInt(hex, 16);
+  let bits = hex.length * 4;
+  let maxVal = Math.pow(2, bits);
+
+  // Check if the highest bit is set (negative number)
+  if (num >= maxVal / 2) {
+    num -= maxVal;
+  }
+
+  return num;
+}
+
+function getTileCoords(coords) {
+  return [
+    hexToSignedDecimal(coords[1]),
+    hexToSignedDecimal(coords[2]),
+    hexToSignedDecimal(coords[3]),
+  ];
+}
+
+function distance(tileCoords, nextTile) {
+  return Math.max(
+    Math.abs(tileCoords[0] - nextTile[0]),
+    Math.abs(tileCoords[1] - nextTile[1]),
+    Math.abs(tileCoords[2] - nextTile[2])
+  );
+}
+
+// -- Building Data
+
+function getData(buildingInstance, key) {
+  return getKVPs(buildingInstance)[key];
+}
+
+function getDataBool(buildingInstance, key) {
+  var hexVal = getData(buildingInstance, key);
+  return typeof hexVal === "string" ? parseInt(hexVal, 16) == 1 : false;
+}
+
+function getDataInt(buildingInstance, key) {
+  var hexVal = getData(buildingInstance, key);
+  return typeof hexVal === "string" ? parseInt(hexVal, 16) : 0;
+}
+
+function getDataBytes24(buildingInstance, key) {
+  var hexVal = getData(buildingInstance, key);
+  return typeof hexVal === "string" ? hexVal.slice(0, -16) : nullBytes24;
+}
+
+function getKVPs(buildingInstance) {
+  return buildingInstance.allData.reduce((kvps, data) => {
+    kvps[data.name] = data.value;
+    return kvps;
+  }, {});
+}
+
 
 // the source for this code is on github where you can find other example buildings:
 // https://github.com/playmint/ds/tree/main/contracts/src/example-plugins
+
+const countBuildings = (buildingsArray, kindID) => {
+  return buildingsArray.filter((b) => b.kind?.id == kindID).length;
+};
