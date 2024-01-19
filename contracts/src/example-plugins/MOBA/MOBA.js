@@ -114,7 +114,6 @@ export default async function update(state) {
   }
 
   const {
-    prizePool,
     gameActive,
     buildingKindIdRed,
     buildingKindIdBlue,
