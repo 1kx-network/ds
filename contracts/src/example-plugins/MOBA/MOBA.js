@@ -8,7 +8,7 @@ export default async function update(state) {
   //
   // Action handler functions
   //
-
+  console.log('update 0')
 
   // An action can set a form submit handler which will be called after the action along with the form values
   let handleFormSubmit;
@@ -54,17 +54,6 @@ export default async function update(state) {
     });
   };
 
-  const claim = () => {
-    const mobileUnit = getMobileUnit(state);
-
-    const payload = ds.encodeCall("function claim()", []);
-
-    ds.dispatch({
-      name: "BUILDING_USE",
-      args: [selectedBuilding.id, mobileUnit.id, payload],
-    });
-  };
-
   const reset = () => {
     const mobileUnit = getMobileUnit(state);
     const payload = ds.encodeCall("function reset()", []);
@@ -91,9 +80,10 @@ export default async function update(state) {
     (b) => b.kind?.name?.value == dvbBuildingName
   );
 
+
   // early out if we don't have any buildings or state isn't ready
   if (!selectedBuilding || !state?.world?.buildings) {
-    console.log("NO MOBA BUILDING FOUND");
+    console.log("NO MOBA BUILDING FOUND 3");
     return {
       version: 1,
       map: [],
@@ -114,6 +104,7 @@ export default async function update(state) {
     };
   }
 
+
   const {
     gameActive,
     buildingKindIdRed,
@@ -121,11 +112,9 @@ export default async function update(state) {
     teamRedLength,
     teamBlueLength,
   } = getHQData(selectedBuilding);
-
   const localBuildings = range5(state, selectedBuilding);
   const redCount = countBuildings(localBuildings, buildingKindIdRed);
   const blueCount = countBuildings(localBuildings, buildingKindIdBlue);
-
   // check current game state:
   // - NotStarted : GameActive == false
   // - Running : GameActive == true && endBlock < currentBlock
@@ -146,7 +135,6 @@ export default async function update(state) {
     teamBlueLength > 0 &&
     redCount === 1 &&
     blueCount === 1;
-
   if (canJoin) {
     htmlBlock += `<p>total players: ${teamRedLength + teamBlueLength
       }</p></br>`;
@@ -154,6 +142,7 @@ export default async function update(state) {
 
   // Show what team the unit is on
   const mobileUnit = getMobileUnit(state);
+
   let isOnTeam = false;
   if (mobileUnit) {
     let unitTeam = "";
@@ -185,7 +174,9 @@ export default async function update(state) {
   }
 
   if (!gameActive) {
+
     if (!isOnTeam) {
+
       buttonList.push({
         text: `Join Game`,
         type: "action",
@@ -217,11 +208,13 @@ export default async function update(state) {
     }
   }
 
+
   if (canStart) {
+
     // Show options to select team buildings
     htmlBlock += `
             <h3>Select Team Buildings</h3>
-            <p> 🔴 Team 🔴</p>
+            <p>🔴 Team 🔴</p>
             ${getBuildingKindSelectHtml(
       state,
       redBuildingTopId,
@@ -260,6 +253,7 @@ export default async function update(state) {
             `;
     }
 
+
     // Reset is always offered (requires some trust!)
     buttonList.push({
       text: "Reset",
@@ -267,31 +261,32 @@ export default async function update(state) {
       action: reset,
       disabled: false,
     });
-
-    return {
-      version: 1,
-      components: [
-        {
-          id: "moba",
-          map: [],
-          type: "building",
-          content: [
-            {
-              id: "default",
-              type: "inline",
-              html: htmlBlock,
-              submit: (values) => {
-                if (typeof handleFormSubmit == "function") {
-                  handleFormSubmit(values);
-                }
-              },
-              buttons: buttonList,
-            },
-          ],
-        },
-      ],
-    };
   }
+
+  console.log({ htmlBlock })
+  return {
+    version: 1,
+    map: [],
+    components: [
+      {
+        id: "moba",
+        type: "building",
+        content: [
+          {
+            id: "default",
+            type: "inline",
+            html: htmlBlock,
+            submit: (values) => {
+              if (typeof handleFormSubmit == "function") {
+                handleFormSubmit(values);
+              }
+            },
+            buttons: buttonList,
+          },
+        ],
+      },
+    ],
+  };
 }
 
 function getHQData(selectedBuilding) {
