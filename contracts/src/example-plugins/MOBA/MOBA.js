@@ -93,13 +93,13 @@ export default async function update(state) {
 
   // early out if we don't have any buildings or state isn't ready
   if (!selectedBuilding || !state?.world?.buildings) {
-    console.log("NO DVB BUILDING FOUND");
+    console.log("NO MOBA BUILDING FOUND");
     return {
       version: 1,
       map: [],
       components: [
         {
-          id: "dbhq",
+          id: "moba",
           type: "building",
           content: [
             {
@@ -272,7 +272,8 @@ export default async function update(state) {
       version: 1,
       components: [
         {
-          id: "dbhq",
+          id: "moba",
+          map: [],
           type: "building",
           content: [
             {
@@ -460,10 +461,10 @@ function getKVPs(buildingInstance) {
   }, {});
 }
 
-
-// the source for this code is on github where you can find other example buildings:
-// https://github.com/playmint/ds/tree/main/contracts/src/example-plugins
-
 const countBuildings = (buildingsArray, kindID) => {
   return buildingsArray.filter((b) => b.kind?.id == kindID).length;
 };
+
+
+// the source for this code is on github where you can find other example buildings:
+// https://github.com/playmint/ds/tree/main/contracts/src/example-plugins
