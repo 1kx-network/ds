@@ -1,0 +1,34 @@
+---
+kind: BuildingKind
+spec:
+  category: factory
+  name: Blue Base
+  description: This is the Base of Team Blue
+  model: 14-14
+  color: 0
+  contract:
+    file: ./BaseBlue.sol
+  plugin:
+    file: ./BaseBlue.js
+  materials:
+    - name: Red Goo
+      quantity: 100
+    - name: Green Goo
+      quantity: 100
+    - name: Blue Goo
+      quantity: 100
+  inputs: []
+  outputs:
+    - name: Nothing
+      quantity: 1
+
+---
+kind: Item
+spec:
+  name: Nothing
+  icon: xx-01
+  goo:
+    red: 0
+    green: 0
+    blue: 0
+  stackable: false
